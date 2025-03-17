@@ -1,0 +1,67 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Poppins;
+}
+
+.button:hover {
+  /* transform: scaleY(1.015); */
+  cursor: pointer;
+  filter: brightness(0.8);
+  transition: all 0.5s;
+}
+
+.button:not(:hover) {
+  /* transform: scaleY(1); */
+  cursor: pointer;
+  filter: brightness(1);
+  transition: all 0.3s;
+}
+
+/* Gradients */
+.gradient-text {
+  background: linear-gradient(to right, #36c1c1, #f8a42a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+  display: inline-block;
+}
+
+/* Animation Binding */
+.heart_beat_infinite {
+  animation: heart_beat_anim 2s alternate infinite;
+}
+
+.fade-in {
+  animation: fade-in-anim 1s;
+}
+
+.fade-in-infinite {
+  animation: fade-in-anim 1s alternate infinite;
+}
+
+/* Animations */
+@keyframes fade-in-anim {
+  0% {
+    scale: 0.9;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes heart_beat_anim {
+  0% {
+    transform: skewY(2deg);
+    transform: skewX(-2deg) scaleX(1);
+  }
+  50% {
+    scale: 1;
+    transform: skewX(2deg);
+    transform: skewY(-2deg) scaleX(0.95);
+  }
+}
