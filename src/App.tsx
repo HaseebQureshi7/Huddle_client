@@ -1,10 +1,14 @@
+import { AlertProvider } from "./context/AlertContext";
+import UserProvider from "./context/UserContext";
 import AppRouter from "./router/AppRouter";
 
 function App() {
   return (
-    <>
-      <AppRouter />
-    </>
+    <AlertProvider>
+      <UserProvider>
+        <AppRouter />
+      </UserProvider>
+    </AlertProvider>
   );
 }
 

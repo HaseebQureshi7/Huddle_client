@@ -1,7 +1,11 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
-import LandingPage from "../pages/LandingPage";
-import LoginPage from "../pages/LoginPage";
+import DashboardPage from "../pages/DashboardPage/Dashboard";
+import LandingPage from "../pages/LandingPage/LandingPage";
+import LoginPage from "../pages/LoginPage/LoginPage";
+import SignupPage from "../pages/SignupPage/SignupPage";
+import DashboardLayout from "../layouts/DashboardLayout";
+import ProtectedRoute from "./ProtectedRoutes";
 // const LoginPage = lazy(() => import("../pages/LoginPage"));
 
 const router = createBrowserRouter([
@@ -9,17 +13,31 @@ const router = createBrowserRouter([
     path: "/",
     element: <AppLayout />,
     children: [
-      { index: true, element: <LandingPage /> }
+      {
+        index: true,
+        element: <LandingPage />,
+      },
+      {
+        path: "/login",
+        element: <LoginPage />,
+      },
+      {
+        path: "/register",
+        element: <SignupPage />,
+      },
+      {
+        path: "/dashboard",
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: "",
+            element: <DashboardLayout />,
+            children: [{ index: true, element: <DashboardPage /> }],
+          },
+        ],
+      },
     ],
   },
-  {
-    index: true,
-    element: <LandingPage/>
-  },
-  {
-    path: "/login",
-    element: <LoginPage/>
-  }
 ]);
 
 export default function AppRouter() {

@@ -1,8 +1,15 @@
-import { CSSProperties, InputHTMLAttributes, LabelHTMLAttributes } from "react";
-import { ColFlex } from "../../styles/utils/flexUtils";
+import {
+  CSSProperties,
+  InputHTMLAttributes,
+  LabelHTMLAttributes,
+  ReactNode,
+} from "react";
+import { ColFlex, RowFlex } from "../../styles/utils/flexUtils";
 
 interface IButton {
   title: string;
+  noLabel?: boolean;
+  icon?: ReactNode;
   parentProps?: InputHTMLAttributes<HTMLDivElement>;
   labelProps?: LabelHTMLAttributes<HTMLLabelElement>;
   inputProps?: InputHTMLAttributes<HTMLInputElement>;
@@ -13,6 +20,8 @@ interface IButton {
 
 function TextField({
   title,
+  icon,
+  noLabel = false,
   parentProps,
   labelProps,
   inputProps,
@@ -31,21 +40,36 @@ function TextField({
       }}
       {...parentProps}
     >
-      <label {...labelProps} style={{ fontSize: "0.9rem", ...labelStyles }}>
-        {title}
-      </label>
-      <input
+      {!noLabel && (
+        <label {...labelProps} style={{ fontSize: "0.9rem", ...labelStyles }}>
+          {title}
+        </label>
+      )}
+      <div
         style={{
+          ...RowFlex,
           width: "100%",
-          padding: "15px",
+          gap: "5px",
+          padding: icon ? "0 0px 0px 10px" : "0",
           borderRadius: "7.5px",
-          border: "none",
           backgroundColor: "#ececec",
-          ...inputStyles,
         }}
-        type="email"
-        {...inputProps}
-      />
+      >
+        {icon && icon}
+        <input
+          style={{
+            width: "100%",
+            padding: "12.5px",
+            borderRadius: "7.5px",
+            border: "none",
+            backgroundColor: "#ececec",
+            outline: "none",
+            ...inputStyles,
+          }}
+          type="text"
+          {...inputProps}
+        />
+      </div>
     </div>
   );
 }
