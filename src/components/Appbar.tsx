@@ -5,9 +5,11 @@ import Button from "./ui/Button";
 import Typography from "./ui/Typography";
 import { useUser } from "../hooks/useUser";
 import colors from "../styles/colors";
+import useLogout from "../hooks/useLogout";
 
 function Appbar() {
   const { user } = useUser();
+  const {mutate: logout, isPending:logoutStatus} = useLogout()
   return (
     <div
       style={{
@@ -49,7 +51,7 @@ function Appbar() {
           <Question size={18} />
         </Button>
 
-        <Button style={{ backgroundColor: colors.error }}>
+        <Button onClick={() => logout()} isLoading={logoutStatus} style={{ backgroundColor: colors.error }}>
           <SignOut size={18} />
         </Button>
       </div>
