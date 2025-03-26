@@ -10,6 +10,7 @@ interface IButton {
   title: string;
   noLabel?: boolean;
   icon?: ReactNode;
+  inputError?: boolean;
   parentProps?: InputHTMLAttributes<HTMLDivElement>;
   labelProps?: LabelHTMLAttributes<HTMLLabelElement>;
   inputProps?: InputHTMLAttributes<HTMLInputElement>;
@@ -21,6 +22,7 @@ interface IButton {
 function TextField({
   title,
   icon,
+  inputError=false,
   noLabel = false,
   parentProps,
   labelProps,
@@ -52,6 +54,7 @@ function TextField({
           gap: "5px",
           padding: icon ? "0 0px 0px 10px" : "0",
           borderRadius: "7.5px",
+          border: inputError ? "2px solid crimson" : "none",
           backgroundColor: "#ececec",
         }}
       >

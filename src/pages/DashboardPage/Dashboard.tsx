@@ -6,13 +6,21 @@ import { ColFlex, RowFlex } from "../../styles/utils/flexUtils";
 import TextField from "../../components/ui/TextField";
 import DashboardCarousel from "./DashboardCarousel";
 import { FormEvent, useState } from "react";
+import NewSessionModal from "./NewSessionModal";
 
 function DashboardPage() {
   const [meetingLink, setMeetingLink] = useState<string>("");
-  const JoinRoom = (e:FormEvent) => {
-    e.preventDefault()
-    console.log("joining...")
-  }
+  const [openNewSessionModal, setOpenNewSessionModal] =
+    useState<boolean>(false);
+
+  const JoinRoom = (e: FormEvent) => {
+    e.preventDefault();
+  };
+
+  const CreateNewSession = () => {
+    setOpenNewSessionModal(true);
+  };
+
   return (
     <div
       className="fade-in"
@@ -55,7 +63,10 @@ function DashboardPage() {
             padding: "25px 0",
           }}
         >
-          <Button style={{ backgroundColor: colors.primary }}>
+          <Button
+            onClick={CreateNewSession}
+            style={{ backgroundColor: colors.primary }}
+          >
             <Scribble size={18} />
             <Typography size={0.8}>Start a new session</Typography>
           </Button>
@@ -72,7 +83,7 @@ function DashboardPage() {
               parentStyles={{ width: "250px" }}
             />
             <Button
-            type="submit"
+              type="submit"
               style={{ backgroundColor: colors.info }}
               disabled={meetingLink?.length == 0}
             >
@@ -82,6 +93,14 @@ function DashboardPage() {
         </div>
       </div>
       <DashboardCarousel />
+
+      {/* New Session Modal */}
+      {openNewSessionModal && (
+        <NewSessionModal
+          openNewSessionModal={openNewSessionModal}
+          setOpenNewSessionModal={setOpenNewSessionModal}
+        />
+      )}
     </div>
   );
 }

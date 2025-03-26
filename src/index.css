@@ -24,7 +24,7 @@
 
 .alert {
   position: fixed;
-  z-index: 999;
+  z-index: 99999;
   bottom: 20px;
   right: 20px;
   padding: 12px 20px;
@@ -50,6 +50,26 @@
 }
 .alert-info {
   background-color: #007bff;
+}
+
+.rotate-infinite {
+  animation: rotate-anim 1s linear forwards infinite;
+  transition: all 1s;
+}
+
+@keyframes rotate-anim {
+  0% {
+    scale: 1;
+    transform: rotateZ(0deg);
+  }
+  50% {
+    scale: 1.25;
+    transform: rotateZ(180deg);
+  }
+  100% {
+    scale: 1;
+    transform: rotateZ(360deg);
+  }
 }
 
 /* Close button */

@@ -25,6 +25,7 @@ const refreshAccessToken = async () => {
     refreshQueue = [];
   } catch (error) {
     // window.location.href = "/"; // Redirect if refresh fails
+    console.log(error)
   } finally {
     isRefreshing = false;
   }

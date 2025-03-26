@@ -6,6 +6,7 @@ import LoginPage from "../pages/LoginPage/LoginPage";
 import SignupPage from "../pages/SignupPage/SignupPage";
 import DashboardLayout from "../layouts/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoutes";
+import SessionPage from "../pages/SessionPage/SessionPage";
 // const LoginPage = lazy(() => import("../pages/LoginPage"));
 
 const router = createBrowserRouter([
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
           },
         ],
       },
+      {
+        path:"/session/:id",
+        element: <SessionPage/>
+      }
     ],
   },
 ]);

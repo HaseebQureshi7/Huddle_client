@@ -34,7 +34,7 @@ function Button({
         filter: disabled ? "brightness(0.7)" : "none",
         cursor: disabled ? "not-allowed" : "pointer",
         borderRadius: "7.5px",
-        fontWeight: 600,
+        fontWeight: 500,
         ...style,
       }}
       type="button"
