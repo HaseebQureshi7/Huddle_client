@@ -35,6 +35,7 @@ function VideoStream() {
 
   return (
     <div
+    className="fade-in-fast"
       style={{
         ...ColFlex,
         width: "100%",

@@ -12,7 +12,7 @@ function AppLayout() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Define public routes that don't require authentication.
-  const publicRoutes = new Set(["/", "/login", "/signup"]);
+  const publicRoutes = new Set(["/", "/login", "/register"]);
 
   // This function handles auto-login by verifying the token or session
   const autoLogin = useCallback(async () => {

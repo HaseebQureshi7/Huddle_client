@@ -175,6 +175,10 @@
   animation: fade-in-anim 1s;
 }
 
+.fade-in-fast {
+  animation: fade-in-anim 0.4s;
+}
+
 .fade-in-infinite {
   animation: fade-in-anim 1s alternate infinite;
 }

@@ -6,6 +6,7 @@ interface IButton extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
   isLoading?: boolean;
   disabled?: boolean;
+  tooltip?: string;
   style?: CSSProperties;
   fullWidth?: boolean;
 }
@@ -14,12 +15,14 @@ function Button({
   children,
   isLoading = false,
   disabled = false,
+  tooltip,
   style,
   fullWidth = false,
   ...rest
 }: IButton) {
   return (
     <button
+      title={tooltip}
       className="button"
       disabled={disabled}
       style={{

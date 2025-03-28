@@ -16,9 +16,13 @@ import {
 } from "@phosphor-icons/react";
 import { ColFlex, RowFlex } from "../../styles/utils/flexUtils";
 import colors from "../../styles/colors";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ICanvas } from "../../types/ICanvas";
 import CreateNewCanvas from "./CreateNewCanvas";
+import { socketURL } from "../../config/baseURL";
+import io from "socket.io-client";
+import { useUser } from "../../hooks/useUser";
+import { useAlert } from "../../hooks/useAlert";
 
 function SessionPage() {
   const { id: room_id } = useParams();
@@ -35,11 +39,59 @@ function SessionPage() {
   useEffect(() => {
     if (room && !isFindingExistingCanvas) {
       if (existingCanvas) {
-        console.log("Existing canvas found!");
+        // console.log("Existing canvas found!");
         setCurrentCanvas(existingCanvas);
       }
     }
   }, [room, existingCanvas, isFindingExistingCanvas, currentCanvas]);
+
+  // Socket Logic
+  const { user } = useUser();
+  const { showAlert, edgeGlow } = useAlert();
+  const socketRef = useRef<any>(null);
+  const [memberIds, setMembersIds] = useState<Array<string>>()
+
+  const joinRoom = () => {
+    if (room && user) {
+      socketRef.current.emit("join-room", { roomId: room.id, userId: user.id });
+    }
+  };
+
+  // Initialize socket and wait for room
+  useEffect(() => {
+    socketRef.current = io(socketURL);
+
+    return () => {
+      socketRef.current.disconnect(); // Cleanup on unmount
+    };
+  }, []);
+
+  useEffect(() => {
+    if (room) {
+      joinRoom();
+    }
+  }, [room]);
+
+  // Listen for room updates
+  useEffect(() => {
+    const handleRoomMembers = ({ members }: any) => {
+      setMembersIds(members)
+      if (user?.id == members[members.length - 1]) {
+        showAlert(`${user?.name}, you are now live`, "success")
+      }
+      else {
+        showAlert(`${members[members.length - 1]} has joined`, "info")
+        edgeGlow("info")
+      }
+      // console.log("Updated room members:", members);
+    };
+
+    socketRef.current.on("room-members", handleRoomMembers);
+
+    return () => {
+      socketRef.current.off("room-members", handleRoomMembers);
+    };
+  }, []);
 
   // Handle loading or missing room
   if (roomLoading) {
@@ -112,7 +164,7 @@ function SessionPage() {
           scrollbarWidth: "thin",
         }}
       >
-        {Array.from({ length: 3 }).map((_, index) => (
+        {memberIds?.map((_, index) => (
           <VideoStream key={index} />
         ))}
       </div>

@@ -31,7 +31,7 @@ function Modal({ children, modalState, subTitle, title }: IModal) {
     >
       {/* modal content */}
       <div
-        className="fade-in"
+        className="fade-in-fast"
         style={{
           ...ColFlex,
           width: "50%",

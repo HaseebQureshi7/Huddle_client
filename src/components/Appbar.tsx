@@ -9,7 +9,7 @@ import useLogout from "../hooks/useLogout";
 
 function Appbar() {
   const { user } = useUser();
-  const {mutate: logout, isPending:logoutStatus} = useLogout()
+  const { mutate: logout, isPending: logoutStatus } = useLogout();
   return (
     <div
       style={{
@@ -42,16 +42,21 @@ function Appbar() {
         </Typography>
       </div>
       <div style={{ ...RowFlex, gap: "10px" }}>
-        <Button>
+        <Button tooltip={`Your settings`}>
           <Typography size={0.8}>{user?.name}</Typography>
           <GearSix size={18} />
         </Button>
 
-        <Button style={{ backgroundColor: colors.primary }}>
+        <Button tooltip="help" style={{ backgroundColor: colors.primary }}>
           <Question size={18} />
         </Button>
 
-        <Button onClick={() => logout()} isLoading={logoutStatus} style={{ backgroundColor: colors.error }}>
+        <Button
+          tooltip="logout"
+          onClick={() => logout()}
+          isLoading={logoutStatus}
+          style={{ backgroundColor: colors.error }}
+        >
           <SignOut size={18} />
         </Button>
       </div>
