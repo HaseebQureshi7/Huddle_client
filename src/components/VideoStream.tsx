@@ -1,77 +1,94 @@
 import { ColFlex, RowFlex } from "../styles/utils/flexUtils";
 import colors from "../styles/colors";
-import { useEffect, useRef, useState } from "react";
-import { SpeakerHigh } from "@phosphor-icons/react";
+import { useEffect, useRef } from "react";
+import { SpeakerHigh, SpeakerSlash } from "@phosphor-icons/react";
 import Button from "./ui/Button";
 import Typography from "./ui/Typography";
 
-function VideoStream() {
+interface IVideoStream {
+  stream: MediaStream | null;
+  userName: string;
+  isMuted?: boolean;
+  isCameraOn?: boolean;
+}
+
+function VideoStream({
+  stream,
+  userName,
+  isMuted = false,
+  isCameraOn = true,
+}: IVideoStream) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
 
+  // Always set the stream when it changes
   useEffect(() => {
-    const getMediaStream = async () => {
-      try {
-        const userStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
-        // console.log(userStream)
-        setStream(userStream);
-        if (videoRef.current) {
-          videoRef.current.srcObject = userStream;
-        }
-      } catch (err) {
-        console.log("Error accessing webcam:", err);
-      }
-    };
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
 
-    getMediaStream();
-
-    return () => {
-      stream?.getTracks().forEach((track) => track.stop());
-    };
-  }, []);
+  // When isCameraOn changes to true, reattach the stream and call play()
+  useEffect(() => {
+    if (isCameraOn && videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+      videoRef.current
+        .play()
+        .catch((err) => console.error("Error playing video:", err));
+    }
+  }, [isCameraOn, stream]);
 
   return (
     <div
-    className="fade-in-fast"
+      className="fade-in-fast"
       style={{
         ...ColFlex,
         width: "100%",
-        // height: "100%",
         aspectRatio: 2,
         borderRadius: "12.5px",
         backgroundColor: colors.warning,
         position: "relative",
       }}
     >
-      {/* Name & Mute */}
-      <div
-        style={{
-          position: "absolute",
-          top: "5px",
-          left: "5px",
-          zIndex: 999,
-          ...RowFlex,
-          gap: "10px",
-        }}
-      >
-        <Button style={{ padding: "5px 10px" }}>
-          <SpeakerHigh />
-          <Typography styles={{ fontWeight: 600, color: "grey" }}>
-            Haseeb Parvaiz
-          </Typography>
-        </Button>
-      </div>
+      {isCameraOn ? (
+        <>
+          {/* Name & Status */}
+          <div
+            style={{
+              position: "absolute",
+              top: "5px",
+              left: "5px",
+              zIndex: 999,
+              ...RowFlex,
+              gap: "10px",
+            }}
+          >
+            <Button style={{ padding: "5px 10px" }}>
+              {isMuted ? <SpeakerSlash /> : <SpeakerHigh />}
+              <Typography styles={{ fontWeight: 600, color: "grey" }}>
+                {userName}
+              </Typography>
+            </Button>
+          </div>
 
-      {/* ✅ Attach ref to video */}
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        style={{ width: "100%", height: "100%", borderRadius: "12.5px" }}
-      />
+          {/* Video element */}
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted // Prevents local feedback
+            style={{ width: "100%", height: "100%", borderRadius: "12.5px" }}
+          />
+        </>
+      ) : (
+        <div style={{ ...ColFlex, width: "100%", height: "100%" }}>
+          {isMuted ? (
+            <SpeakerSlash weight="bold" />
+          ) : (
+            <SpeakerHigh weight="bold" />
+          )}
+          <Typography styles={{ fontWeight: 600 }}>{userName}</Typography>
+        </div>
+      )}
     </div>
   );
 }

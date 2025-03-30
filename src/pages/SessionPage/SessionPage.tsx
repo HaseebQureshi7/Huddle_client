@@ -1,6 +1,5 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Canvas from "../../components/Canvas";
-import VideoStream from "../../components/VideoStream";
 import useGetRoom from "../../hooks/useGetRoom";
 import useGetCanvasByRoomId from "../../hooks/useGetCanvasByRoomId";
 import LoadingPage from "../LoadingPage/LoadingPage";
@@ -14,7 +13,7 @@ import {
   PhoneDisconnect,
   Webcam,
 } from "@phosphor-icons/react";
-import { ColFlex, RowFlex } from "../../styles/utils/flexUtils";
+import { RowFlex } from "../../styles/utils/flexUtils";
 import colors from "../../styles/colors";
 import { useEffect, useRef, useState } from "react";
 import { ICanvas } from "../../types/ICanvas";
@@ -22,97 +21,143 @@ import CreateNewCanvas from "./CreateNewCanvas";
 import { socketURL } from "../../config/baseURL";
 import io from "socket.io-client";
 import { useUser } from "../../hooks/useUser";
+import VideoStreamingContainer from "./VideoStreamingContainer";
 import { useAlert } from "../../hooks/useAlert";
+import { IStreamOptions } from "../../types/IStreamOptions";
 
 function SessionPage() {
   const { id: room_id } = useParams();
-  const { data: room, isLoading: roomLoading } = useGetRoom(room_id!);
-
-  // Always call hooks at the top level. If room is not available, the query is disabled.
+  const {
+    data: room,
+    isLoading: roomLoading,
+    isError: roomError,
+  } = useGetRoom(room_id!);
   const { data: existingCanvas, isPending: isFindingExistingCanvas } =
     useGetCanvasByRoomId(room?.id!);
+
+  const navigate = useNavigate();
 
   const [currentCanvas, setCurrentCanvas] = useState<ICanvas | null>(null);
   const [actionbarActive, setActionbarActive] = useState(false);
 
-  // Handle side effects (setting canvas) in an effect.
-  useEffect(() => {
-    if (room && !isFindingExistingCanvas) {
-      if (existingCanvas) {
-        // console.log("Existing canvas found!");
-        setCurrentCanvas(existingCanvas);
-      }
-    }
-  }, [room, existingCanvas, isFindingExistingCanvas, currentCanvas]);
+  const [streamOptions, setStreamOptions] = useState<IStreamOptions>({
+    audio: true,
+    video: true,
+  });
 
-  // Socket Logic
+  useEffect(() => {
+    if (room && !isFindingExistingCanvas && existingCanvas) {
+      setCurrentCanvas(existingCanvas);
+    }
+  }, [room, existingCanvas, isFindingExistingCanvas]);
+
+  // Socket Setup
   const { user } = useUser();
-  const { showAlert, edgeGlow } = useAlert();
   const socketRef = useRef<any>(null);
-  const [memberIds, setMembersIds] = useState<Array<string>>()
+  const { showAlert, edgeGlow } = useAlert();
+  // Use memberDetails instead of memberIds – each member has id and name
+  const [memberDetails, setMemberDetails] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
 
   const joinRoom = () => {
     if (room && user) {
-      socketRef.current.emit("join-room", { roomId: room.id, userId: user.id });
+      // Emit join-room along with user's id and name
+      socketRef.current.emit("join-room", {
+        roomId: room.id,
+        userId: user.id,
+        userName: user.name,
+      });
     }
   };
 
-  // Initialize socket and wait for room
+  // Initialize socket connection
   useEffect(() => {
     socketRef.current = io(socketURL);
-
     return () => {
-      socketRef.current.disconnect(); // Cleanup on unmount
+      socketRef.current.disconnect();
     };
   }, []);
 
+  // Join room when available
   useEffect(() => {
     if (room) {
       joinRoom();
     }
   }, [room]);
 
-  // Listen for room updates
   useEffect(() => {
     const handleRoomMembers = ({ members }: any) => {
-      setMembersIds(members)
-      if (user?.id == members[members.length - 1]) {
-        showAlert(`${user?.name}, you are now live`, "success")
-      }
-      else {
-        showAlert(`${members[members.length - 1]} has joined`, "info")
-        edgeGlow("info")
-      }
-      // console.log("Updated room members:", members);
+      // memberDetails is the previous state (default to empty array if undefined)
+      const oldMembers = memberDetails || [];
+
+      // Find which members have left: those in oldMembers not in the new members list
+      const leftMembers = oldMembers.filter(
+        (old) => !members.some((m: any) => m.id === old.id)
+      );
+
+      // Find which members have joined: those in new members not in oldMembers
+      const joinedMembers = members.filter(
+        (m: any) => !oldMembers.some((old) => old.id === m.id)
+      );
+
+      leftMembers.forEach((member) => {
+        showAlert(`${member.name} has left`, "error");
+        edgeGlow("error");
+      });
+
+      joinedMembers.forEach((member: any) => {
+        // Optionally, ignore showing alert if it's the current user
+        if (member.name !== user?.name) {
+          showAlert(`${member.name} has joined`, "info");
+          edgeGlow("info");
+        }
+      });
+
+      // Update state with new members
+      setMemberDetails(members);
     };
 
     socketRef.current.on("room-members", handleRoomMembers);
-
     return () => {
       socketRef.current.off("room-members", handleRoomMembers);
     };
-  }, []);
+  }, [memberDetails, user, edgeGlow, showAlert]);
 
-  // Handle loading or missing room
-  if (roomLoading) {
+  if (roomLoading || isFindingExistingCanvas) {
     return <LoadingPage width="100dvw" height="100dvh" />;
   }
-
-  if (!room) {
+  if (roomError || !room) {
     return <NoRoomFound />;
   }
 
-  if (isFindingExistingCanvas) {
-    return <LoadingPage width="100dvw" height="100dvh" />;
-  }
+  // To toggle audio:
+  const toggleAudio = () => {
+    showAlert("Audio off", "info");
+    setStreamOptions((prev) => ({ ...prev, audio: !prev.audio }));
+  };
 
-  // Now you know the room exists and your hook is either disabled or finished.
+  // To toggle video:
+  const toggleVideo = () => {
+    if (streamOptions.video) {
+      showAlert("Video off", "info");
+      setStreamOptions((prev) => ({ ...prev, video: false }));
+    } else {
+      showAlert("Video on", "info");
+      setStreamOptions((prev) => ({ ...prev, video: true }));
+    }
+  };
+
+  const leaveSession = () => {
+    showAlert("You left", "info");
+    socketRef.current.disconnect();
+    navigate("/dashboard");
+  };
+
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch((err) => {
-        console.error(
-          `Error attempting to enable full-screen mode: ${err.message}`
-        );
+        console.error(`Error enabling full-screen mode: ${err.message}`);
       });
     } else {
       document.exitFullscreen();
@@ -150,24 +195,13 @@ function SessionPage() {
       </div>
 
       {/* Video Streams Section */}
-      <div
-        style={{
-          ...ColFlex,
-          width: "30%",
-          height: "100%",
-          justifyContent: "flex-start",
-          border: "2px solid grey",
-          borderRadius: "12.5px",
-          padding: "10px",
-          gap: "10px",
-          overflowY: "scroll",
-          scrollbarWidth: "thin",
-        }}
-      >
-        {memberIds?.map((_, index) => (
-          <VideoStream key={index} />
-        ))}
-      </div>
+      <VideoStreamingContainer
+        memberDetails={memberDetails}
+        socket={socketRef.current}
+        room={room}
+        user={user}
+        streamOptions={streamOptions}
+      />
 
       {/* Floating Action Bar / Controls */}
       <div
@@ -184,9 +218,9 @@ function SessionPage() {
           backdropFilter: "blur(2px)",
           borderRadius: "12.5px",
           padding: "5px",
-          ...RowFlex,
-          justifyContent: "space-evenly",
           transition: "all 0.4s",
+          display: "flex",
+          justifyContent: "space-evenly",
         }}
       >
         <Button>
@@ -195,19 +229,32 @@ function SessionPage() {
             size={actionbarActive ? 25 : 15}
           />
         </Button>
-        <Button>
+        <Button
+          onClick={toggleAudio}
+          style={{
+            backgroundColor: streamOptions.audio ? "black" : colors.error,
+          }}
+        >
           <MicrophoneSlash
             style={{ transition: "all 0.4s" }}
             size={actionbarActive ? 25 : 15}
           />
         </Button>
-        <Button>
+        <Button
+          onClick={toggleVideo}
+          style={{
+            backgroundColor: streamOptions.video ? "black" : colors.error,
+          }}
+        >
           <Webcam
             style={{ transition: "all 0.4s" }}
             size={actionbarActive ? 25 : 15}
           />
         </Button>
-        <Button style={{ backgroundColor: colors.error }}>
+        <Button
+          onClick={leaveSession}
+          style={{ backgroundColor: colors.error }}
+        >
           <PhoneDisconnect
             style={{ transition: "all 0.4s" }}
             size={actionbarActive ? 25 : 15}
