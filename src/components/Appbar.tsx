@@ -25,7 +25,7 @@ function Appbar() {
       <div style={{ minWidth: "125px", ...RowFlex, gap: "10px" }}>
         <img
           style={{ width: "60px", aspectRatio: "auto" }}
-          src="/public/images/huddle-logo-top.png"
+          src="/images/huddle-logo-top.png"
         />
         <Typography
           textProps={{ className: "gradient-text" }}

@@ -20,7 +20,7 @@ function LandingPage() {
 
   // Preload images and Auto navigate to the next page
   useEffect(() => {
-    preloadImages(["/public/images/huddle-logo-top.png"]).then((loaded) => {
+    preloadImages(["/images/huddle-logo-top.png"]).then((loaded) => {
       setImagesLoaded(loaded);
 
       setTimeout(() => {
@@ -41,7 +41,7 @@ function LandingPage() {
       <img
         className="heart_beat_infinite"
         style={{ width: "10%", aspectRatio: "auto" }}
-        src="/public/images/huddle-logo-top.png"
+        src="/images/huddle-logo-top.png"
       />
       <div style={{ ...ColFlex }}>
         <h1 className="gradient-text" style={{ fontWeight: 500 }}>

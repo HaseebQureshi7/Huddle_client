@@ -4,11 +4,11 @@ import { preloadImages } from "../../utils/imagePreloader";
 import LoadingPage from "../LoadingPage/LoadingPage";
 
 const images = [
-  "/public/images/illustrations/illustration-0.gif",
-  "/public/images/illustrations/illustration-1.gif",
-  "/public/images/illustrations/illustration-2.gif",
-  "/public/images/illustrations/illustration-3.gif",
-  "/public/images/illustrations/illustration-4.gif",
+  "/images/illustrations/illustration-0.gif",
+  "/images/illustrations/illustration-1.gif",
+  "/images/illustrations/illustration-2.gif",
+  "/images/illustrations/illustration-3.gif",
+  "/images/illustrations/illustration-4.gif",
 ];
 
 function DashboardCarousel() {

@@ -56,7 +56,7 @@ function LoginPage() {
                   aspectRatio: "auto",
                   marginBottom: "25px",
                 }}
-                src="/public/images/huddle-logo-top.png"
+                src="/images/huddle-logo-top.png"
               />
               <Typography
                 textProps={{ className: "gradient-text" }}
