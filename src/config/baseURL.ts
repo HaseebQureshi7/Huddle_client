@@ -3,5 +3,5 @@
 // export const socketURL = "ws://localhost:3000";
 
 // --> prod
-export const baseURL = "https://huddle-server-45lp.onrender.com";
-export const socketURL = "ws://huddle-server-45lp.onrender.com";
+export const baseURL = "https://huddle-server-0yw2.onrender.com";
+export const socketURL = "ws://huddle-server-0yw2.onrender.com";
