@@ -13,7 +13,7 @@ import {
   PhoneDisconnect,
   Webcam,
 } from "@phosphor-icons/react";
-import { RowFlex } from "../../styles/utils/flexUtils";
+import { ColFlex, RowFlex } from "../../styles/utils/flexUtils";
 import colors from "../../styles/colors";
 import { useEffect, useRef, useState } from "react";
 import { ICanvas } from "../../types/ICanvas";
@@ -24,6 +24,7 @@ import { useUser } from "../../hooks/useUser";
 import VideoStreamingContainer from "./VideoStreamingContainer";
 import { useAlert } from "../../hooks/useAlert";
 import { IStreamOptions } from "../../types/IStreamOptions";
+import { useResponsive } from "../../hooks/useResponsive";
 
 function SessionPage() {
   const { id: room_id } = useParams();
@@ -36,6 +37,7 @@ function SessionPage() {
     useGetCanvasByRoomId(room?.id!);
 
   const navigate = useNavigate();
+  const { category } = useResponsive();
 
   const [currentCanvas, setCurrentCanvas] = useState<ICanvas | null>(null);
   const [actionbarActive, setActionbarActive] = useState(false);
@@ -43,6 +45,10 @@ function SessionPage() {
   const [streamOptions, setStreamOptions] = useState<IStreamOptions>({
     audio: true,
     video: true,
+  });
+
+  const [userOptions, setUserOptions] = useState({
+    hasLeft: false,
   });
 
   useEffect(() => {
@@ -151,6 +157,9 @@ function SessionPage() {
   const leaveSession = () => {
     showAlert("You left", "info");
     socketRef.current.disconnect();
+    setUserOptions({
+      hasLeft: true,
+    });
     navigate("/dashboard");
   };
 
@@ -166,7 +175,16 @@ function SessionPage() {
 
   return (
     <div
-      style={{
+      style={category == "xs" ? {
+        ...ColFlex,
+        width: "100dvw",
+        height: "100dvh",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        backgroundColor: "black",
+        padding: "10px",
+        gap: "15px",
+      } :{
         ...RowFlex,
         width: "100dvw",
         height: "100dvh",
@@ -180,7 +198,7 @@ function SessionPage() {
       {/* Canvas Section */}
       <div
         style={{
-          width: "70%",
+          width: category == "xs" ? "100%" :"70%",
           height: "100%",
           border: "2px solid grey",
           borderRadius: "12.5px",
@@ -196,6 +214,7 @@ function SessionPage() {
 
       {/* Video Streams Section */}
       <VideoStreamingContainer
+        userOptions={userOptions}
         memberDetails={memberDetails}
         socket={socketRef.current}
         room={room}
@@ -213,7 +232,7 @@ function SessionPage() {
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 999,
-          width: actionbarActive ? "40%" : "20%",
+          width: category == "xs" ? "75%" : (actionbarActive ? "40%" : "20%"),
           backgroundColor: "rgba(150,150,150, 0.3)",
           backdropFilter: "blur(2px)",
           borderRadius: "12.5px",

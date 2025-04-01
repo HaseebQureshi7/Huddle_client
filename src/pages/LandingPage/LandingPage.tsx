@@ -4,9 +4,12 @@ import { ColFlex, PageFlex } from "../../styles/utils/flexUtils";
 import { preloadImages } from "../../utils/imagePreloader";
 import LoadingPage from "../LoadingPage/LoadingPage";
 import { useUser } from "../../hooks/useUser";
+import { useResponsive } from "../../hooks/useResponsive";
+import Typography from "../../components/ui/Typography";
 
 function LandingPage() {
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const { category } = useResponsive();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,13 +43,17 @@ function LandingPage() {
     >
       <img
         className="heart_beat_infinite"
-        style={{ width: "10%", aspectRatio: "auto" }}
+        style={{ width: category == "xs" ? "30%" : "10%", aspectRatio: "auto" }}
         src="/images/huddle-logo-top.png"
       />
       <div style={{ ...ColFlex }}>
-        <h1 className="gradient-text" style={{ fontWeight: 500 }}>
+        <Typography
+          textProps={{ className: "gradient-text" }}
+          styles={{ fontWeight: 600 }}
+          size={2}
+        >
           Huddle
-        </h1>
+        </Typography>
         <h5 style={{ fontWeight: 500, color: "grey" }}>
           Collaborative Space for creatives
         </h5>

@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Appbar from "../components/Appbar";
+import Appbar from "../components/Appbar/Appbar";
 import { ColFlex } from "../styles/utils/flexUtils";
 
 function DashboardLayout() {

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import VideoStream from "../../components/VideoStream";
 import { ColFlex } from "../../styles/utils/flexUtils";
 import { IStreamOptions } from "../../types/IStreamOptions";
+import { useResponsive } from "../../hooks/useResponsive";
 
 // Using Google's STUN server
 const ICE_SERVERS = {
@@ -13,8 +14,13 @@ interface MemberDetail {
   name: string;
 }
 
+interface IUserOptions {
+  hasLeft: boolean;
+}
+
 interface VideoStreamingContainerProps {
   memberDetails: MemberDetail[];
+  userOptions: IUserOptions;
   socket: any;
   room: any;
   user: any;
@@ -28,16 +34,23 @@ interface RemoteStatus {
 
 function VideoStreamingContainer({
   memberDetails,
+  userOptions,
   socket,
   room,
   user,
   streamOptions,
 }: VideoStreamingContainerProps) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStreams, setRemoteStreams] = useState<{ [key: string]: MediaStream }>({});
+  const [remoteStreams, setRemoteStreams] = useState<{
+    [key: string]: MediaStream;
+  }>({});
   // Remote status mapping for each user id
-  const [remoteStatus, setRemoteStatus] = useState<{ [key: string]: RemoteStatus }>({});
+  const [remoteStatus, setRemoteStatus] = useState<{
+    [key: string]: RemoteStatus;
+  }>({});
   const peerConnections = useRef<{ [key: string]: RTCPeerConnection }>({});
+
+  const { category } = useResponsive();
 
   // Get local video/audio stream (only once)
   useEffect(() => {
@@ -72,8 +85,16 @@ function VideoStreamingContainer({
         track.enabled = streamOptions.video;
       });
       // Optionally, you could emit your own mute/video status when changed:
-      socket.emit("mute-status", { roomId: room.id, userId: user.id, muted: !streamOptions.audio });
-      socket.emit("video-status", { roomId: room.id, userId: user.id, videoOn: streamOptions.video });
+      socket.emit("mute-status", {
+        roomId: room.id,
+        userId: user.id,
+        muted: !streamOptions.audio,
+      });
+      socket.emit("video-status", {
+        roomId: room.id,
+        userId: user.id,
+        videoOn: streamOptions.video,
+      });
     }
   }, [streamOptions, localStream, socket, room, user]);
 
@@ -87,7 +108,9 @@ function VideoStreamingContainer({
       if (!pc) {
         pc = new RTCPeerConnection(ICE_SERVERS);
         peerConnections.current[senderId] = pc;
-        localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+        localStream
+          .getTracks()
+          .forEach((track) => pc.addTrack(track, localStream));
         pc.onicecandidate = (event) => {
           if (event.candidate) {
             socket.emit("ice-candidate", {
@@ -99,7 +122,10 @@ function VideoStreamingContainer({
           }
         };
         pc.ontrack = (event) => {
-          setRemoteStreams((prev) => ({ ...prev, [senderId]: event.streams[0] }));
+          setRemoteStreams((prev) => ({
+            ...prev,
+            [senderId]: event.streams[0],
+          }));
         };
       }
       await pc.setRemoteDescription(new RTCSessionDescription(sdp));
@@ -162,7 +188,9 @@ function VideoStreamingContainer({
       if (member.id !== user.id && !peerConnections.current[member.id]) {
         const pc = new RTCPeerConnection(ICE_SERVERS);
         peerConnections.current[member.id] = pc;
-        localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+        localStream
+          .getTracks()
+          .forEach((track) => pc.addTrack(track, localStream));
         pc.onicecandidate = (event) => {
           if (event.candidate) {
             socket.emit("ice-candidate", {
@@ -174,7 +202,10 @@ function VideoStreamingContainer({
           }
         };
         pc.ontrack = (event) => {
-          setRemoteStreams((prev) => ({ ...prev, [member.id]: event.streams[0] }));
+          setRemoteStreams((prev) => ({
+            ...prev,
+            [member.id]: event.streams[0],
+          }));
         };
         pc.createOffer()
           .then((offer) => pc.setLocalDescription(offer))
@@ -200,17 +231,30 @@ function VideoStreamingContainer({
     };
   }, [memberDetails, localStream, socket, room, user]);
 
+  // when user leaves
+  useEffect(() => {
+    if (userOptions.hasLeft) {
+      Object.values(peerConnections.current).forEach((pc) => pc.close());
+      peerConnections.current = {}; // Clear peer connections
+
+      localStream?.getVideoTracks()[0].stop();
+      setLocalStream(null);
+      setRemoteStreams({});
+      setRemoteStatus({});
+    }
+  }, [userOptions.hasLeft]);
+
   return (
     <div
       style={{
         ...ColFlex,
-        width: "30%",
-        height: "100%",
+        width: category == "xs" ? "100%" : "30%",
+        height: category == "xs" ? "75%" : "100%",
         justifyContent: "flex-start",
         border: "2px solid grey",
         borderRadius: "12.5px",
-        padding: "10px",
-        gap: "10px",
+        padding: category == "xs" ? "20px" :"10px",
+        gap: category == "xs" ? "20px" :"10px",
         overflowY: "scroll",
         scrollbarWidth: "thin",
       }}

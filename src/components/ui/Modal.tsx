@@ -3,6 +3,7 @@ import { ColFlex, RowFlex } from "../../styles/utils/flexUtils";
 import Typography from "./Typography";
 import Button from "./Button";
 import { ReactNode } from "react";
+import { useResponsive } from "../../hooks/useResponsive";
 
 interface IModal {
   children: ReactNode;
@@ -15,6 +16,11 @@ interface IModal {
 }
 
 function Modal({ children, modalState, subTitle, title }: IModal) {
+  const { category } = useResponsive();
+
+  if (!modalState.openModal) {
+    return;
+  }
   return (
     <div
       style={{
@@ -34,14 +40,14 @@ function Modal({ children, modalState, subTitle, title }: IModal) {
         className="fade-in-fast"
         style={{
           ...ColFlex,
-          width: "50%",
-          minHeight: "30dvh",
+          width: category == "xs" ? "90%" : "50%",
+          minHeight: category == "xs" ? "15vh" : "30dvh",
           justifyContent: "flex-start",
-        //   border: "2px solid lightgrey",
+          //   border: "2px solid lightgrey",
           borderRadius: "12.5px",
           backgroundColor: "white",
           padding: "25px 20px",
-          gap:"25px"
+          gap: "25px",
         }}
       >
         {/* modal header */}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ColFlex } from "../../styles/utils/flexUtils";
 import { preloadImages } from "../../utils/imagePreloader";
 import LoadingPage from "../LoadingPage/LoadingPage";
+import { useResponsive } from "../../hooks/useResponsive";
 
 const images = [
   "/images/illustrations/illustration-0.gif",
@@ -14,6 +15,8 @@ const images = [
 function DashboardCarousel() {
   const [currImageIndex, setCurrImageIndex] = useState<number>(0);
   const [imagesLoaded, setImageLoaded] = useState<boolean>(false);
+
+  const { category } = useResponsive();
 
   useEffect(() => {
     preloadImages(images).then(() => {
@@ -32,10 +35,12 @@ function DashboardCarousel() {
     <div
       className="fade-in"
       style={{
-        width: "40%",
-        height: "350px",
+        width: category == "xs" ? "100%" :"40%",
+        height: category == "xs" ? "350px" : "350px",
         ...ColFlex,
+        // backgroundColor:"red",
         overflow: "hidden",
+        marginTop: category == "xs" ? "25px": 0,
         aspectRatio: 1,
       }}
     >

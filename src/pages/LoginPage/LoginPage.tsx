@@ -5,6 +5,7 @@ import TextField from "../../components/ui/TextField";
 import Typography from "../../components/ui/Typography";
 import useLogin from "../../hooks/useLogin";
 import { PageFlex, RowFlex, ColFlex } from "../../styles/utils/flexUtils";
+import { useResponsive } from "../../hooks/useResponsive";
 
 function LoginPage() {
   const [loginDetails, setLoginDetails] = useState({
@@ -12,7 +13,9 @@ function LoginPage() {
     password: "",
   });
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { category } = useResponsive();
+  
 
   const { mutate: login, isPending } = useLogin();
 
@@ -40,7 +43,7 @@ function LoginPage() {
           <div
             style={{
               ...ColFlex,
-              width: "40%",
+              width: category == "xs" ? "80%" : "40%",
               padding: "50px 25px",
               borderRadius: "25px",
               gap: "40px",
@@ -66,7 +69,7 @@ function LoginPage() {
                 Welcome back
               </Typography>
               <Typography
-                styles={{ fontWeight: 400, color: "grey" }}
+                styles={{ fontWeight: 400, color: "grey", textAlign:'center' }}
                 size={0.8}
               >
                 Enter your email and password to access your account

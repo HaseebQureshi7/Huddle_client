@@ -75,7 +75,7 @@ function VideoStream({
             ref={videoRef}
             autoPlay
             playsInline
-            muted // Prevents local feedback
+            muted={isMuted} // Prevents local feedback
             style={{ width: "100%", height: "100%", borderRadius: "12.5px" }}
           />
         </>

@@ -1,18 +1,31 @@
 import { GearSix, Question, SignOut } from "@phosphor-icons/react";
-import { RowFlex } from "../styles/utils/flexUtils";
-import { CurrentDateTime } from "../utils/CurrentDate";
-import Button from "./ui/Button";
-import Typography from "./ui/Typography";
-import { useUser } from "../hooks/useUser";
-import colors from "../styles/colors";
-import useLogout from "../hooks/useLogout";
+import { ColFlex, RowFlex } from "../../styles/utils/flexUtils";
+import { CurrentDateTime } from "../../utils/CurrentDate";
+import Button from "../ui/Button";
+import Typography from "../ui/Typography";
+import { useUser } from "../../hooks/useUser";
+import colors from "../../styles/colors";
+import useLogout from "../../hooks/useLogout";
+import { useState } from "react";
+import LogoutModal from "./LogoutModal";
+import { useResponsive } from "../../hooks/useResponsive";
 
 function Appbar() {
   const { user } = useUser();
+
+  const { category } = useResponsive();
+
+  const [showLogoutModal, setShowLogoutModal] = useState<boolean>(false);
   const { mutate: logout, isPending: logoutStatus } = useLogout();
   return (
     <div
-      style={{
+      style={category == "xs" ? {
+        ...ColFlex,
+        width: "100%",
+        alignItems:"flex-start",
+        padding: "15px",
+        gap:"5px"
+      } :{
         ...RowFlex,
         width: "100%",
         justifyContent: "space-between",
@@ -36,7 +49,7 @@ function Appbar() {
         </Typography>
       </div>
       {/* current date */}
-      <div style={{ ...RowFlex, gap: "10px", marginLeft: "auto" }}>
+      <div style={{ ...RowFlex, gap: "10px", marginLeft: category == "xs" ? "none" : "auto" }}>
         <Typography size={1.5} styles={{ fontWeight: 400, color: "grey" }}>
           {CurrentDateTime()}
         </Typography>
@@ -53,13 +66,18 @@ function Appbar() {
 
         <Button
           tooltip="logout"
-          onClick={() => logout()}
+          onClick={() => setShowLogoutModal(true)}
           isLoading={logoutStatus}
           style={{ backgroundColor: colors.error }}
         >
           <SignOut size={18} />
         </Button>
       </div>
+      <LogoutModal
+        showLogoutModal={showLogoutModal}
+        setShowLogoutModal={setShowLogoutModal}
+        logoutFn={logout}
+      />
     </div>
   );
 }
