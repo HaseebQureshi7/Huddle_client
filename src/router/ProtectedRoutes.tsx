@@ -5,7 +5,7 @@ function ProtectedRoute() {
   // check for user's existance
   const { user } = useUser();
   // const user = false;
-  return user ? <Outlet /> : <Navigate to="/" />;
+  return user ? <Outlet /> : <Navigate to="/login" />;
 }
 
 export default ProtectedRoute;

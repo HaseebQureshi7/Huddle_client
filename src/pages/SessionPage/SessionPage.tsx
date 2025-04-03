@@ -206,7 +206,7 @@ function SessionPage() {
         }}
       >
         {currentCanvas ? (
-          <Canvas room={room} canvas={currentCanvas} />
+          <Canvas room={room} socket={socketRef.current} canvas={currentCanvas} />
         ) : (
           <CreateNewCanvas setCurrentCanvas={setCurrentCanvas} />
         )}

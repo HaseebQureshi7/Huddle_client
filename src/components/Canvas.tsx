@@ -13,13 +13,16 @@ import colors from "../styles/colors";
 import { IRoom } from "../types/IRoom";
 import useUpdateCanvas from "../hooks/useUpdateCanvas";
 import { ICanvas } from "../types/ICanvas";
+import { Socket } from "socket.io-client";
+import useFetchLatestCanvas from "../hooks/useFetchLatestCanvas";
 
 interface ICanvasProps {
   room: IRoom;
+  socket: typeof Socket;
   canvas: ICanvas;
 }
 
-function Canvas({ room, canvas }: ICanvasProps) {
+function Canvas({ room, socket, canvas }: ICanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 500, height: 500 });
   const [isDrawing, setIsDrawing] = useState(false);
@@ -32,6 +35,11 @@ function Canvas({ room, canvas }: ICanvasProps) {
   const { mutate: syncCanvasState, isPending: syncCanvasStatus } =
     useUpdateCanvas();
 
+  const {
+    data: latestCanvasData,
+    refetch,
+  } = useFetchLatestCanvas(canvas.id!);
+
   const update = () => {
     const updateCanvasData: Partial<ICanvas> = {
       id: canvas.id,
@@ -40,19 +48,35 @@ function Canvas({ room, canvas }: ICanvasProps) {
     syncCanvasState(updateCanvasData);
   };
 
-  // Save every 4 seconds
-  useEffect(() => {
-    const syncTimer = setInterval(() => {
-      const updateCanvasData: Partial<ICanvas> = {
-        id: canvas.id,
-        data: canvasData,
-      };
-      syncCanvasState(updateCanvasData);
-    }, 4000);
+  const sendNewCanvasEvent = () => {
+    socket.emit("new-canvas-state", { roomId: room.id, canvasState: "new" });
+  };
 
-    // Clean up the interval when component unmounts
-    return () => clearInterval(syncTimer);
-  }, [canvas.id, canvasData, syncCanvasState]);
+  useEffect(() => {
+    const handleNewCanvasState = async () => {
+      console.log("New canvas state received!");
+      await refetch(); // Fetch the latest data
+    };
+
+    socket.on("new-canvas-state", handleNewCanvasState);
+
+    return () => {
+      socket.off("new-canvas-state", handleNewCanvasState);
+    };
+  }, [socket, refetch]);
+
+  useEffect(() => {
+    // console.log(latestCanvasData)
+    setCanvasData(latestCanvasData);
+  }, [latestCanvasData]);
+
+  // Only save when user makes changes
+  useEffect(() => {
+    if (canvasData) {
+      update()
+      sendNewCanvasEvent();
+    }
+  }, [canvasData]);
 
   // Clear canvas
   const clearScreen = () => {
@@ -62,6 +86,8 @@ function Canvas({ room, canvas }: ICanvasProps) {
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     setCanvasData(null); // Reset stored data
+    // update()
+    sendNewCanvasEvent()
   };
 
   const toggleEraser = () => {

@@ -19,20 +19,24 @@ function Appbar() {
   const { mutate: logout, isPending: logoutStatus } = useLogout();
   return (
     <div
-      style={category == "xs" ? {
-        ...ColFlex,
-        width: "100%",
-        alignItems:"flex-start",
-        padding: "15px",
-        gap:"5px"
-      } :{
-        ...RowFlex,
-        width: "100%",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: "25px",
-        padding: "15px",
-      }}
+      style={
+        category == "xs"
+          ? {
+              ...ColFlex,
+              width: "100%",
+              alignItems: "flex-start",
+              padding: "15px",
+              gap: "5px",
+            }
+          : {
+              ...RowFlex,
+              width: "100%",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "25px",
+              padding: "15px",
+            }
+      }
     >
       {/* Logo bar */}
       <div style={{ minWidth: "125px", ...RowFlex, gap: "10px" }}>
@@ -49,7 +53,13 @@ function Appbar() {
         </Typography>
       </div>
       {/* current date */}
-      <div style={{ ...RowFlex, gap: "10px", marginLeft: category == "xs" ? "none" : "auto" }}>
+      <div
+        style={{
+          ...RowFlex,
+          gap: "10px",
+          marginLeft: category == "xs" ? "none" : "auto",
+        }}
+      >
         <Typography size={1.5} styles={{ fontWeight: 400, color: "grey" }}>
           {CurrentDateTime()}
         </Typography>
@@ -67,13 +77,13 @@ function Appbar() {
         <Button
           tooltip="logout"
           onClick={() => setShowLogoutModal(true)}
-          isLoading={logoutStatus}
           style={{ backgroundColor: colors.error }}
         >
           <SignOut size={18} />
         </Button>
       </div>
       <LogoutModal
+        logoutStatus={logoutStatus}
         showLogoutModal={showLogoutModal}
         setShowLogoutModal={setShowLogoutModal}
         logoutFn={logout}
