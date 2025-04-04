@@ -1,25 +1,34 @@
 import { useParams } from "react-router-dom";
 import Button from "../../components/ui/Button";
-import Typography from "../../components/ui/Typography";
-import { ColFlex, RowFlex } from "../../styles/utils/flexUtils";
+import { ColFlex } from "../../styles/utils/flexUtils";
 import colors from "../../styles/colors";
 import { ICanvas } from "../../types/ICanvas";
 import useCreateCanvas from "../../hooks/useCreateCanvas";
+import { Palette, PencilSimpleSlash } from "@phosphor-icons/react";
+import { Socket } from "socket.io-client";
 
 interface ICreateNewCanvasProps {
   setCurrentCanvas: (data: ICanvas | null) => void;
+  setNoCanvasMode: (data: boolean) => void;
+  socket: typeof Socket
 }
 
-function CreateNewCanvas({ setCurrentCanvas }: ICreateNewCanvasProps) {
+function CreateNewCanvas({ setCurrentCanvas, setNoCanvasMode, socket }: ICreateNewCanvasProps) {
   const { id: roomId } = useParams();
   const { mutate: createCanvas, isPending } = useCreateCanvas({
     onSuccess: (data: ICanvas) => {
       setCurrentCanvas(data.data);
+      socket.emit("new-canvas-start", { roomId: roomId });
     },
     onError: (error: Error) => {
       console.error("Error creating canvas:", error);
     },
   });
+
+  const handleNoCanvasMode = () => {
+    setNoCanvasMode(true)
+    socket.emit("no-canvas-mode", {roomId: roomId})
+  };
 
   const handleCreate = () => {
     if (!roomId) {
@@ -30,17 +39,22 @@ function CreateNewCanvas({ setCurrentCanvas }: ICreateNewCanvasProps) {
   };
 
   return (
-    <div style={{ ...ColFlex, width: "100%", height: "100%", color: "white" }}>
-      <Typography styles={{ ...RowFlex, gap: "10px" }}>
-        No canvas found!{" "}
+    <div style={{ ...ColFlex, width: "100%", height: "100%", gap:"25px" }}>
         <Button
-          onClick={handleCreate}
-          style={{ color: colors.primary }}
+          onClick={handleNoCanvasMode}
           disabled={isPending}
         >
-          {isPending ? "Creating..." : "Create one?"}
+          <PencilSimpleSlash size={18}/>
+          Start without a canvas
         </Button>
-      </Typography>
+        <Button
+          onClick={handleCreate}
+          style={{ backgroundColor: colors.background, color:"black" }}
+          disabled={isPending}
+        >
+          <Palette size={18}/>
+          {isPending ? "Creating..." : "Create a collaboration board?"}
+        </Button>
     </div>
   );
 }

@@ -19,6 +19,7 @@ interface IUserOptions {
 }
 
 interface VideoStreamingContainerProps {
+  fullWidthMode: boolean;
   memberDetails: MemberDetail[];
   userOptions: IUserOptions;
   socket: any;
@@ -33,6 +34,7 @@ interface RemoteStatus {
 }
 
 function VideoStreamingContainer({
+  fullWidthMode,
   memberDetails,
   userOptions,
   socket,
@@ -248,13 +250,16 @@ function VideoStreamingContainer({
     <div
       style={{
         ...ColFlex,
-        width: category == "xs" ? "100%" : "30%",
+        flexDirection: fullWidthMode ? "row" : "column",
+        width: category == "xs" || fullWidthMode ? "100%" : "30%",
         height: category == "xs" ? "75%" : "100%",
-        justifyContent: "flex-start",
+        justifyContent: fullWidthMode ? "space-evenly" : "flex-start",
+        alignItems: fullWidthMode ? "flex-start" : "center",
         border: "2px solid grey",
         borderRadius: "12.5px",
-        padding: category == "xs" ? "20px" :"10px",
-        gap: category == "xs" ? "20px" :"10px",
+        padding: category == "xs" ? "20px" : "10px",
+        gap: category == "xs" || fullWidthMode ? "20px" : "10px",
+        flexWrap: fullWidthMode ? "wrap" : category == "xs" ? "wrap" : "nowrap",
         overflowY: "scroll",
         scrollbarWidth: "thin",
       }}
@@ -262,10 +267,11 @@ function VideoStreamingContainer({
       {/* Local Video */}
       {localStream && (
         <VideoStream
+          fullWidthMode={fullWidthMode}
           userName="You"
           stream={localStream}
           // For local stream, you can control status directly from streamOptions
-          isMuted={!streamOptions.audio}
+          isMuted={true}
           isCameraOn={streamOptions.video}
         />
       )}
@@ -273,13 +279,16 @@ function VideoStreamingContainer({
       {memberDetails
         .filter((member) => member.id !== user.id)
         .map((member) => (
+          <>
           <VideoStream
+            fullWidthMode={fullWidthMode}
             key={member.id}
             userName={member.name}
             stream={remoteStreams[member.id] || null}
             isMuted={remoteStatus[member.id]?.muted ?? false}
             isCameraOn={remoteStatus[member.id]?.videoOn ?? true}
           />
+          </>
         ))}
     </div>
   );

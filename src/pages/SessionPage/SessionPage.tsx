@@ -19,7 +19,7 @@ import { useEffect, useRef, useState } from "react";
 import { ICanvas } from "../../types/ICanvas";
 import CreateNewCanvas from "./CreateNewCanvas";
 import { socketURL } from "../../config/baseURL";
-import io from "socket.io-client";
+import io, { Socket } from "socket.io-client";
 import { useUser } from "../../hooks/useUser";
 import VideoStreamingContainer from "./VideoStreamingContainer";
 import { useAlert } from "../../hooks/useAlert";
@@ -33,13 +33,17 @@ function SessionPage() {
     isLoading: roomLoading,
     isError: roomError,
   } = useGetRoom(room_id!);
-  const { data: existingCanvas, isPending: isFindingExistingCanvas } =
-    useGetCanvasByRoomId(room?.id!);
+  const {
+    data: existingCanvas,
+    isPending: isFindingExistingCanvas,
+    refetch: findCanvasAgain,
+  } = useGetCanvasByRoomId(room?.id!);
 
   const navigate = useNavigate();
   const { category } = useResponsive();
 
   const [currentCanvas, setCurrentCanvas] = useState<ICanvas | null>(null);
+  const [noCanvasMode, setNoCanvasMode] = useState<boolean>(false);
   const [actionbarActive, setActionbarActive] = useState(false);
 
   const [streamOptions, setStreamOptions] = useState<IStreamOptions>({
@@ -91,6 +95,27 @@ function SessionPage() {
       joinRoom();
     }
   }, [room]);
+
+  useEffect(() => {
+    const socket: typeof Socket = socketRef.current;
+  
+    socket.on("new-canvas-started", () => {
+      // console.log("Canvas trigger received");
+      findCanvasAgain(); // This will be your re-fetch/re-render logic
+      showAlert("New board has been started", "info")
+    });
+    
+    socket.on("no-canvas-mode", () => {
+      console.log("NO CANVAS MODE!")
+      setNoCanvasMode(true)
+      showAlert("No canvas mode has been started", "info")
+    })
+  
+    return () => {
+      socket.off("new-canvas-started");
+      socket.off("no-canvas-mode");
+    };
+  }, []);
 
   useEffect(() => {
     const handleRoomMembers = ({ members }: any) => {
@@ -175,45 +200,60 @@ function SessionPage() {
 
   return (
     <div
-      style={category == "xs" ? {
-        ...ColFlex,
-        width: "100dvw",
-        height: "100dvh",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        backgroundColor: "black",
-        padding: "10px",
-        gap: "15px",
-      } :{
-        ...RowFlex,
-        width: "100dvw",
-        height: "100dvh",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        backgroundColor: "black",
-        padding: "10px",
-        gap: "15px",
-      }}
+      style={
+        category == "xs"
+          ? {
+              ...ColFlex,
+              width: "100dvw",
+              height: "100dvh",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              backgroundColor: "black",
+              padding: "10px",
+              gap: "15px",
+            }
+          : {
+              ...RowFlex,
+              width: "100dvw",
+              height: "100dvh",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              backgroundColor: "black",
+              padding: "10px",
+              gap: "15px",
+            }
+      }
     >
       {/* Canvas Section */}
-      <div
-        style={{
-          width: category == "xs" ? "100%" :"70%",
-          height: "100%",
-          border: "2px solid grey",
-          borderRadius: "12.5px",
-          overflow: "hidden",
-        }}
-      >
-        {currentCanvas ? (
-          <Canvas room={room} socket={socketRef.current} canvas={currentCanvas} />
-        ) : (
-          <CreateNewCanvas setCurrentCanvas={setCurrentCanvas} />
-        )}
-      </div>
+      {!noCanvasMode && (
+        <div
+          style={{
+            width: category == "xs" ? "100%" : "70%",
+            height: "100%",
+            border: "2px solid grey",
+            borderRadius: "12.5px",
+            overflow: "hidden",
+          }}
+        >
+          {currentCanvas ? (
+            <Canvas
+              room={room}
+              socket={socketRef.current}
+              canvas={currentCanvas}
+            />
+          ) : (
+            <CreateNewCanvas
+              socket={socketRef.current}
+              setNoCanvasMode={setNoCanvasMode}
+              setCurrentCanvas={setCurrentCanvas}
+            />
+          )}
+        </div>
+      )}
 
       {/* Video Streams Section */}
       <VideoStreamingContainer
+        fullWidthMode={noCanvasMode}
         userOptions={userOptions}
         memberDetails={memberDetails}
         socket={socketRef.current}
@@ -232,7 +272,7 @@ function SessionPage() {
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 999,
-          width: category == "xs" ? "75%" : (actionbarActive ? "40%" : "20%"),
+          width: category == "xs" ? "75%" : actionbarActive ? "40%" : "20%",
           backgroundColor: "rgba(150,150,150, 0.3)",
           backdropFilter: "blur(2px)",
           borderRadius: "12.5px",

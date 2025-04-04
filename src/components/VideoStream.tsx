@@ -4,12 +4,14 @@ import { useEffect, useRef } from "react";
 import { SpeakerHigh, SpeakerSlash } from "@phosphor-icons/react";
 import Button from "./ui/Button";
 import Typography from "./ui/Typography";
+import { useResponsive } from "../hooks/useResponsive";
 
 interface IVideoStream {
   stream: MediaStream | null;
   userName: string;
   isMuted?: boolean;
   isCameraOn?: boolean;
+  fullWidthMode: boolean;
 }
 
 function VideoStream({
@@ -17,8 +19,10 @@ function VideoStream({
   userName,
   isMuted = false,
   isCameraOn = true,
+  fullWidthMode
 }: IVideoStream) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const {category} = useResponsive()
 
   // Always set the stream when it changes
   useEffect(() => {
@@ -37,13 +41,22 @@ function VideoStream({
     }
   }, [isCameraOn, stream]);
 
+  const isSmallDevice = category == "md" || category == "xs"
+
   return (
     <div
       className="fade-in-fast"
-      style={{
+      style={isSmallDevice ? {
         ...ColFlex,
-        width: "100%",
-        aspectRatio: 2,
+        width: fullWidthMode ? "45%" : '50%',
+        aspectRatio: fullWidthMode ? 1.25 :2,
+        borderRadius: "12.5px",
+        backgroundColor: colors.warning,
+        position: "relative",
+      } : {
+        ...ColFlex,
+        width: fullWidthMode ? "30%" : '100%',
+        aspectRatio: fullWidthMode ? 1.25 :2,
         borderRadius: "12.5px",
         backgroundColor: colors.warning,
         position: "relative",
@@ -76,7 +89,7 @@ function VideoStream({
             autoPlay
             playsInline
             muted={isMuted} // Prevents local feedback
-            style={{ width: "100%", height: "100%", borderRadius: "12.5px" }}
+            style={{ width: "100%", height: "100%", borderRadius: "12.5px", objectFit:"cover", }}
           />
         </>
       ) : (
