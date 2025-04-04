@@ -270,7 +270,6 @@ function VideoStreamingContainer({
           fullWidthMode={fullWidthMode}
           userName="You"
           stream={localStream}
-          // For local stream, you can control status directly from streamOptions
           isMuted={true}
           isCameraOn={streamOptions.video}
         />
@@ -280,14 +279,14 @@ function VideoStreamingContainer({
         .filter((member) => member.id !== user.id)
         .map((member) => (
           <>
-          <VideoStream
-            fullWidthMode={fullWidthMode}
-            key={member.id}
-            userName={member.name}
-            stream={remoteStreams[member.id] || null}
-            isMuted={remoteStatus[member.id]?.muted ?? false}
-            isCameraOn={remoteStatus[member.id]?.videoOn ?? true}
-          />
+            <VideoStream
+              key={member.id}
+              fullWidthMode={fullWidthMode}
+              userName={member.name}
+              stream={remoteStreams[member.id] || null}
+              isMuted={remoteStatus[member.id]?.muted ?? false}
+              isCameraOn={remoteStatus[member.id]?.videoOn ?? true}
+            />
           </>
         ))}
     </div>
