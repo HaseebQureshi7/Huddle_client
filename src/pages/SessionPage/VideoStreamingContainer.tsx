@@ -43,14 +43,11 @@ function VideoStreamingContainer({
   streamOptions,
 }: VideoStreamingContainerProps) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStreams, setRemoteStreams] = useState<{
-    [key: string]: MediaStream;
-  }>({});
-  // Remote status mapping for each user id
-  const [remoteStatus, setRemoteStatus] = useState<{
-    [key: string]: RemoteStatus;
-  }>({});
+  const [remoteStreams, setRemoteStreams] = useState<{ [key: string]: MediaStream }>({});
+  const [remoteStatus, setRemoteStatus] = useState<{ [key: string]: RemoteStatus }>({});
   const peerConnections = useRef<{ [key: string]: RTCPeerConnection }>({});
+  // ICE candidate queue: stores candidates until remoteDescription is set
+  const iceCandidateQueue = useRef<{ [key: string]: RTCIceCandidateInit[] }>({});
 
   const { category } = useResponsive();
 
@@ -74,7 +71,6 @@ function VideoStreamingContainer({
       Object.values(peerConnections.current).forEach((pc) => pc.close());
       localStream?.getTracks().forEach((track) => track.stop());
     };
-    // get stream only once on mount
   }, []);
 
   // Update local tracks' enabled state when streamOptions change.
@@ -86,7 +82,7 @@ function VideoStreamingContainer({
       localStream.getVideoTracks().forEach((track) => {
         track.enabled = streamOptions.video;
       });
-      // Optionally, you could emit your own mute/video status when changed:
+      // Optionally, emit mute/video status to other peers.
       socket.emit("mute-status", {
         roomId: room.id,
         userId: user.id,
@@ -110,9 +106,7 @@ function VideoStreamingContainer({
       if (!pc) {
         pc = new RTCPeerConnection(ICE_SERVERS);
         peerConnections.current[senderId] = pc;
-        localStream
-          .getTracks()
-          .forEach((track) => pc.addTrack(track, localStream));
+        localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
         pc.onicecandidate = (event) => {
           if (event.candidate) {
             socket.emit("ice-candidate", {
@@ -130,7 +124,19 @@ function VideoStreamingContainer({
           }));
         };
       }
+      // Set remote description for the incoming offer
       await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+      // Flush queued ICE candidates if any
+      if (iceCandidateQueue.current[senderId]) {
+        for (const queuedCandidate of iceCandidateQueue.current[senderId]) {
+          try {
+            await pc.addIceCandidate(new RTCIceCandidate(queuedCandidate));
+          } catch (err) {
+            console.error("Error adding queued ICE candidate", err);
+          }
+        }
+        delete iceCandidateQueue.current[senderId];
+      }
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       socket.emit("answer", {
@@ -144,14 +150,41 @@ function VideoStreamingContainer({
     socket.on("answer", async ({ senderId, sdp }: any) => {
       const pc = peerConnections.current[senderId];
       if (pc) {
-        await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+        if (pc.signalingState !== "stable") {
+          await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+          // Flush queued candidates for this peer if any
+          if (iceCandidateQueue.current[senderId]) {
+            for (const queuedCandidate of iceCandidateQueue.current[senderId]) {
+              try {
+                await pc.addIceCandidate(new RTCIceCandidate(queuedCandidate));
+              } catch (err) {
+                console.error("Error adding queued ICE candidate", err);
+              }
+            }
+            delete iceCandidateQueue.current[senderId];
+          }
+        } else {
+          console.warn("Answer received but connection is already stable. Ignoring answer.");
+        }
       }
     });
 
     socket.on("ice-candidate", async ({ senderId, candidate }: any) => {
       const pc = peerConnections.current[senderId];
       if (pc && candidate) {
-        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        // If remote description is not set, queue the candidate
+        if (!pc.remoteDescription) {
+          if (!iceCandidateQueue.current[senderId]) {
+            iceCandidateQueue.current[senderId] = [];
+          }
+          iceCandidateQueue.current[senderId].push(candidate);
+        } else {
+          try {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+          } catch (err) {
+            console.error("Error adding received ICE candidate", err);
+          }
+        }
       }
     });
 
@@ -190,9 +223,7 @@ function VideoStreamingContainer({
       if (member.id !== user.id && !peerConnections.current[member.id]) {
         const pc = new RTCPeerConnection(ICE_SERVERS);
         peerConnections.current[member.id] = pc;
-        localStream
-          .getTracks()
-          .forEach((track) => pc.addTrack(track, localStream));
+        localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
         pc.onicecandidate = (event) => {
           if (event.candidate) {
             socket.emit("ice-candidate", {
@@ -233,11 +264,11 @@ function VideoStreamingContainer({
     };
   }, [memberDetails, localStream, socket, room, user]);
 
-  // when user leaves
+  // When user leaves
   useEffect(() => {
     if (userOptions.hasLeft) {
       Object.values(peerConnections.current).forEach((pc) => pc.close());
-      peerConnections.current = {}; // Clear peer connections
+      peerConnections.current = {};
 
       localStream?.getVideoTracks()[0].stop();
       setLocalStream(null);
@@ -251,15 +282,15 @@ function VideoStreamingContainer({
       style={{
         ...ColFlex,
         flexDirection: fullWidthMode ? "row" : "column",
-        width: category == "xs" || fullWidthMode ? "100%" : "30%",
-        height: category == "xs" ? "75%" : "100%",
+        width: category === "xs" || fullWidthMode ? "100%" : "30%",
+        height: category === "xs" ? "75%" : "100%",
         justifyContent: fullWidthMode ? "space-evenly" : "flex-start",
         alignItems: fullWidthMode ? "flex-start" : "center",
         border: "2px solid grey",
         borderRadius: "12.5px",
-        padding: category == "xs" ? "20px" : "10px",
-        gap: category == "xs" || fullWidthMode ? "20px" : "10px",
-        flexWrap: fullWidthMode ? "wrap" : category == "xs" ? "wrap" : "nowrap",
+        padding: category === "xs" ? "20px" : "10px",
+        gap: category === "xs" || fullWidthMode ? "20px" : "10px",
+        flexWrap: fullWidthMode ? "wrap" : category === "xs" ? "wrap" : "nowrap",
         overflowY: "scroll",
         scrollbarWidth: "thin",
       }}
@@ -278,16 +309,14 @@ function VideoStreamingContainer({
       {memberDetails
         .filter((member) => member.id !== user.id)
         .map((member) => (
-          <>
-            <VideoStream
-              key={member.id}
-              fullWidthMode={fullWidthMode}
-              userName={member.name}
-              stream={remoteStreams[member.id] || null}
-              isMuted={remoteStatus[member.id]?.muted ?? false}
-              isCameraOn={remoteStatus[member.id]?.videoOn ?? true}
-            />
-          </>
+          <VideoStream
+            key={member.id}
+            fullWidthMode={fullWidthMode}
+            userName={member.name}
+            stream={remoteStreams[member.id] || null}
+            isMuted={remoteStatus[member.id]?.muted ?? false}
+            isCameraOn={remoteStatus[member.id]?.videoOn ?? true}
+          />
         ))}
     </div>
   );

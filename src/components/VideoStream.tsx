@@ -31,15 +31,21 @@ function VideoStream({
     }
   }, [stream]);
 
-  // When isCameraOn changes to true, reattach the stream and call play()
-  useEffect(() => {
-    if (isCameraOn && videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
-      videoRef.current
-        .play()
-        .catch((err) => console.error("Error playing video:", err));
-    }
-  }, [isCameraOn, stream]);
+// When isCameraOn changes to true, reattach the stream and wait for metadata before calling play()
+useEffect(() => {
+  if (isCameraOn && videoRef.current && stream) {
+    videoRef.current.srcObject = stream;
+    const videoEl = videoRef.current;
+    const playVideo = () => {
+      videoEl.play().catch((err) => console.error("Error playing video:", err));
+    };
+    videoEl.addEventListener("loadedmetadata", playVideo);
+    return () => {
+      videoEl.removeEventListener("loadedmetadata", playVideo);
+    };
+  }
+}, [isCameraOn, stream]);
+
 
   const isSmallDevice = category == "md" || category == "xs"
 
