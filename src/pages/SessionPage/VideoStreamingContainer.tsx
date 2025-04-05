@@ -82,7 +82,7 @@ function VideoStreamingContainer({
       localStream.getVideoTracks().forEach((track) => {
         track.enabled = streamOptions.video;
       });
-      // Optionally, emit mute/video status to other peers.
+      // Emit mute/video status to other peers.
       socket.emit("mute-status", {
         roomId: room.id,
         userId: user.id,
@@ -150,21 +150,18 @@ function VideoStreamingContainer({
     socket.on("answer", async ({ senderId, sdp }: any) => {
       const pc = peerConnections.current[senderId];
       if (pc) {
-        if (pc.signalingState !== "stable") {
-          await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-          // Flush queued candidates for this peer if any
-          if (iceCandidateQueue.current[senderId]) {
-            for (const queuedCandidate of iceCandidateQueue.current[senderId]) {
-              try {
-                await pc.addIceCandidate(new RTCIceCandidate(queuedCandidate));
-              } catch (err) {
-                console.error("Error adding queued ICE candidate", err);
-              }
+        // Always set the remote description when an answer is received.
+        await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+        // Flush queued candidates for this peer if any
+        if (iceCandidateQueue.current[senderId]) {
+          for (const queuedCandidate of iceCandidateQueue.current[senderId]) {
+            try {
+              await pc.addIceCandidate(new RTCIceCandidate(queuedCandidate));
+            } catch (err) {
+              console.error("Error adding queued ICE candidate", err);
             }
-            delete iceCandidateQueue.current[senderId];
           }
-        } else {
-          console.warn("Answer received but connection is already stable. Ignoring answer.");
+          delete iceCandidateQueue.current[senderId];
         }
       }
     });
@@ -220,7 +217,8 @@ function VideoStreamingContainer({
   useEffect(() => {
     if (!localStream || !socket || !room || !user) return;
     memberDetails.forEach((member) => {
-      if (member.id !== user.id && !peerConnections.current[member.id]) {
+      // Only create and send an offer if the current user’s ID is lower than the member’s.
+      if (member.id !== user.id && user.id < member.id && !peerConnections.current[member.id]) {
         const pc = new RTCPeerConnection(ICE_SERVERS);
         peerConnections.current[member.id] = pc;
         localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
@@ -254,6 +252,7 @@ function VideoStreamingContainer({
       }
     });
 
+    // Cleanup: close connections for members no longer in the room.
     return () => {
       memberDetails.forEach((member) => {
         if (peerConnections.current[member.id]) {
