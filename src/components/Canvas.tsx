@@ -158,7 +158,9 @@ const Canvas: React.FC<ICanvasProps> = ({ room, socket, canvas }) => {
   };
 
   return (
-    <div style={{ width: "100%", height: "100%", position: "relative" }}>
+    <div 
+    className="fade-in"
+    style={{ width: "100%", height: "100%", position: "relative" }}>
       {/* Info Panel */}
       <div
         style={{

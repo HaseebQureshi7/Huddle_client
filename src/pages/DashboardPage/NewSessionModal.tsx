@@ -4,7 +4,7 @@ import Modal from "../../components/ui/Modal";
 import TextField from "../../components/ui/TextField";
 import colors from "../../styles/colors";
 import { ColFlex, RowFlex } from "../../styles/utils/flexUtils";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useAlert } from "../../hooks/useAlert";
 import useCreateRoom from "../../hooks/useCreateRoom";
 
@@ -19,15 +19,11 @@ function NewSessionModal({
 }: INewSessionModal) {
   const { showAlert, edgeGlow } = useAlert();
 
-  // const [errors, _] = useState(new Set<string>())
-
   const { mutate: createRoom, isPending } = useCreateRoom();
   const [sessionName, setSessionName] = useState<string>("");
-  const CreateNewSession = () => {
-    // clear the previous errorSet
-    // errors.clear()
+  const CreateNewSession = (e: FormEvent) => {
+    e.preventDefault();
     if (!sessionName) {
-      // errors.add("sessionName");
       showAlert("Session name is required!", "error");
       edgeGlow("error");
       return;
@@ -44,7 +40,10 @@ function NewSessionModal({
         setOpenModal: setOpenNewSessionModal,
       }}
     >
-      <div style={{ ...ColFlex, width: "100%", gap: "20px" }}>
+      <form
+        onSubmit={CreateNewSession}
+        style={{ ...ColFlex, width: "100%", gap: "20px" }}
+      >
         {/* inputs */}
         <div style={{ ...ColFlex, width: "100%", gap: "5px" }}>
           <TextField
@@ -54,6 +53,8 @@ function NewSessionModal({
             inputProps={{
               onChange: (e) => setSessionName(e.target.value),
               placeholder: "New session name",
+              autoFocus: true,
+              required: true,
             }}
           />
         </div>
@@ -73,15 +74,15 @@ function NewSessionModal({
             Cancel
           </Button>
           <Button
+            type="submit"
             isLoading={isPending}
-            onClick={CreateNewSession}
             style={{ backgroundColor: colors.primary }}
           >
             <Play />
             Start Session
           </Button>
         </div>
-      </div>
+      </form>
     </Modal>
   );
 }

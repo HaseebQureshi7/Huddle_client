@@ -10,10 +10,14 @@ import { Socket } from "socket.io-client";
 interface ICreateNewCanvasProps {
   setCurrentCanvas: (data: ICanvas | null) => void;
   setNoCanvasMode: (data: boolean) => void;
-  socket: typeof Socket
+  socket: typeof Socket;
 }
 
-function CreateNewCanvas({ setCurrentCanvas, setNoCanvasMode, socket }: ICreateNewCanvasProps) {
+function CreateNewCanvas({
+  setCurrentCanvas,
+  setNoCanvasMode,
+  socket,
+}: ICreateNewCanvasProps) {
   const { id: roomId } = useParams();
   const { mutate: createCanvas, isPending } = useCreateCanvas({
     onSuccess: (data: ICanvas) => {
@@ -26,8 +30,8 @@ function CreateNewCanvas({ setCurrentCanvas, setNoCanvasMode, socket }: ICreateN
   });
 
   const handleNoCanvasMode = () => {
-    setNoCanvasMode(true)
-    socket.emit("no-canvas-mode", {roomId: roomId})
+    setNoCanvasMode(true);
+    socket.emit("no-canvas-mode", { roomId: roomId });
   };
 
   const handleCreate = () => {
@@ -39,22 +43,22 @@ function CreateNewCanvas({ setCurrentCanvas, setNoCanvasMode, socket }: ICreateN
   };
 
   return (
-    <div style={{ ...ColFlex, width: "100%", height: "100%", gap:"25px" }}>
-        <Button
-          onClick={handleNoCanvasMode}
-          disabled={isPending}
-        >
-          <PencilSimpleSlash size={18}/>
-          Start without a canvas
-        </Button>
-        <Button
-          onClick={handleCreate}
-          style={{ backgroundColor: colors.background, color:"black" }}
-          disabled={isPending}
-        >
-          <Palette size={18}/>
-          {isPending ? "Creating..." : "Create a collaboration board?"}
-        </Button>
+    <div
+      className="fade-in"
+      style={{ ...ColFlex, width: "100%", height: "100%", gap: "25px" }}
+    >
+      <Button onClick={handleNoCanvasMode} disabled={isPending}>
+        <PencilSimpleSlash size={18} />
+        Start without a canvas
+      </Button>
+      <Button
+        onClick={handleCreate}
+        style={{ backgroundColor: colors.background, color: "black" }}
+        disabled={isPending}
+      >
+        <Palette size={18} />
+        {isPending ? "Creating..." : "Create a collaboration board?"}
+      </Button>
     </div>
   );
 }

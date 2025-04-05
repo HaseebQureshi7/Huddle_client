@@ -9,6 +9,8 @@ import { FormEvent, useState } from "react";
 import NewSessionModal from "./NewSessionModal";
 import { useNavigate } from "react-router-dom";
 import { useResponsive } from "../../hooks/useResponsive";
+import useGetRoom from "../../hooks/useGetRoom";
+import { useAlert } from "../../hooks/useAlert";
 
 function DashboardPage() {
   const [meetingLink, setMeetingLink] = useState<string>("");
@@ -18,11 +20,22 @@ function DashboardPage() {
   const navigate = useNavigate();
   const { category } = useResponsive();
 
-  const JoinRoom = (e: FormEvent) => {
+  const { refetch, isLoading: checkRoomStatus } = useGetRoom(meetingLink);
+  const { showAlert, edgeGlow } = useAlert();
+
+  const JoinRoom = async (e: FormEvent) => {
     e.preventDefault();
-    // create a artificial delay for joining meeting
-    // and check if the room exists
-    navigate(`/session/${meetingLink}`);
+
+    const result = await refetch();
+
+    if (result.status === "success") {
+      navigate(`/session/${meetingLink}`);
+    } else {
+      // handle error or room not found
+      showAlert("Room doesn't exist", "error");
+      edgeGlow("error");
+      console.error("Room does not exist");
+    }
   };
 
   const CreateNewSession = () => {
@@ -116,6 +129,7 @@ function DashboardPage() {
               parentStyles={{ width: "250px" }}
             />
             <Button
+            isLoading={checkRoomStatus}
               type="submit"
               style={{ backgroundColor: colors.info }}
               disabled={meetingLink?.length == 0}

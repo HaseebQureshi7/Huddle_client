@@ -41,7 +41,7 @@ function Modal({ children, modalState, subTitle, title }: IModal) {
         style={{
           ...ColFlex,
           width: category == "xs" ? "90%" : "50%",
-          minHeight: category == "xs" ? "15vh" : "30dvh",
+          // minHeight: category == "xs" ? "15vh" : "30dvh",
           justifyContent: "flex-start",
           //   border: "2px solid lightgrey",
           borderRadius: "12.5px",

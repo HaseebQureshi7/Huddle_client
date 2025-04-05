@@ -6,7 +6,7 @@ function useGetCanvasByRoomId(roomId: string) {
   return useQuery({
     queryKey: ["canvas", roomId], // ✅ Unique key per room
     queryFn: () => getCanvasByRoomId(roomId), // ✅ Pass argument
-    enabled: !!roomId, // ✅ Prevent fetching when roomId is undefined
+    enabled: false,
     retry: 0,
     select: (data) => {
       return data as ICanvas;

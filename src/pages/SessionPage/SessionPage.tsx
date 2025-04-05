@@ -11,7 +11,7 @@ import {
   Hand,
   MicrophoneSlash,
   PhoneDisconnect,
-  Webcam,
+  VideoCameraSlash,
 } from "@phosphor-icons/react";
 import { ColFlex, RowFlex } from "../../styles/utils/flexUtils";
 import colors from "../../styles/colors";
@@ -31,13 +31,13 @@ function SessionPage() {
   const {
     data: room,
     isLoading: roomLoading,
-    isError: roomError,
+    refetch: checkRoomsExistance,
   } = useGetRoom(room_id!);
   const {
     data: existingCanvas,
     isPending: isFindingExistingCanvas,
     refetch: findCanvasAgain,
-  } = useGetCanvasByRoomId(room?.id!);
+  } = useGetCanvasByRoomId(room_id!);
 
   const navigate = useNavigate();
   const { category } = useResponsive();
@@ -54,6 +54,17 @@ function SessionPage() {
   const [userOptions, setUserOptions] = useState({
     hasLeft: false,
   });
+
+  const [noRoomFound, setNoRoomFound] = useState<boolean>(false);
+
+  useEffect(() => {
+    (async () => {
+      const res = await checkRoomsExistance();
+      if (res.status == "error") {
+        setNoRoomFound(true);
+      } else findCanvasAgain();
+    })();
+  }, []);
 
   useEffect(() => {
     if (room && !isFindingExistingCanvas && existingCanvas) {
@@ -98,19 +109,19 @@ function SessionPage() {
 
   useEffect(() => {
     const socket: typeof Socket = socketRef.current;
-  
+
     socket.on("new-canvas-started", () => {
       // console.log("Canvas trigger received");
       findCanvasAgain(); // This will be your re-fetch/re-render logic
-      showAlert("New board has been started", "info")
+      showAlert("New board has been started", "info");
     });
-    
+
     socket.on("no-canvas-mode", () => {
-      console.log("NO CANVAS MODE!")
-      setNoCanvasMode(true)
-      showAlert("No canvas mode has been started", "info")
-    })
-  
+      console.log("NO CANVAS MODE!");
+      setNoCanvasMode(true);
+      showAlert("No canvas mode has been started", "info");
+    });
+
     return () => {
       socket.off("new-canvas-started");
       socket.off("no-canvas-mode");
@@ -155,20 +166,12 @@ function SessionPage() {
     };
   }, [memberDetails, user, edgeGlow, showAlert]);
 
-  if (roomLoading || isFindingExistingCanvas) {
-    return <LoadingPage width="100dvw" height="100dvh" />;
-  }
-  if (roomError || !room) {
-    return <NoRoomFound />;
-  }
-
-  // To toggle audio:
+  // Floating Action Bar (FAB) control methods
   const toggleAudio = () => {
     showAlert("Audio off", "info");
     setStreamOptions((prev) => ({ ...prev, audio: !prev.audio }));
   };
 
-  // To toggle video:
   const toggleVideo = () => {
     if (streamOptions.video) {
       showAlert("Video off", "info");
@@ -198,8 +201,16 @@ function SessionPage() {
     }
   };
 
+  if (roomLoading) {
+    return <LoadingPage width="100dvw" height="100dvh" />;
+  }
+  if (noRoomFound) {
+    return <NoRoomFound />;
+  }
+
   return (
     <div
+      className="fade-in"
       style={
         category == "xs"
           ? {
@@ -235,7 +246,7 @@ function SessionPage() {
             overflow: "hidden",
           }}
         >
-          {currentCanvas ? (
+          {currentCanvas && room ? (
             <Canvas
               room={room}
               socket={socketRef.current}
@@ -282,13 +293,14 @@ function SessionPage() {
           justifyContent: "space-evenly",
         }}
       >
-        <Button>
+        <Button title="Send Emoji">
           <Confetti
             style={{ transition: "all 0.4s" }}
             size={actionbarActive ? 25 : 15}
           />
         </Button>
         <Button
+          title="Turn mic off"
           onClick={toggleAudio}
           style={{
             backgroundColor: streamOptions.audio ? "black" : colors.error,
@@ -300,33 +312,35 @@ function SessionPage() {
           />
         </Button>
         <Button
+          title="Turn camera off"
           onClick={toggleVideo}
           style={{
             backgroundColor: streamOptions.video ? "black" : colors.error,
           }}
         >
-          <Webcam
+          <VideoCameraSlash
             style={{ transition: "all 0.4s" }}
             size={actionbarActive ? 25 : 15}
           />
         </Button>
-        <Button
-          onClick={leaveSession}
-          style={{ backgroundColor: colors.error }}
-        >
-          <PhoneDisconnect
-            style={{ transition: "all 0.4s" }}
-            size={actionbarActive ? 25 : 15}
-          />
-        </Button>
-        <Button style={{ backgroundColor: colors.warning }}>
+        <Button title="Raise Hand" style={{ backgroundColor: colors.warning }}>
           <Hand
             style={{ transition: "all 0.4s" }}
             size={actionbarActive ? 25 : 15}
           />
         </Button>
-        <Button onClick={toggleFullScreen}>
+        <Button title="Full Screen" onClick={toggleFullScreen}>
           <CornersOut
+            style={{ transition: "all 0.4s" }}
+            size={actionbarActive ? 25 : 15}
+          />
+        </Button>
+        <Button
+          title="Leave Session"
+          onClick={leaveSession}
+          style={{ backgroundColor: colors.error }}
+        >
+          <PhoneDisconnect
             style={{ transition: "all 0.4s" }}
             size={actionbarActive ? 25 : 15}
           />
