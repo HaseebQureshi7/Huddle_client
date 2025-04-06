@@ -23,6 +23,7 @@ function Modal({ children, modalState, subTitle, title }: IModal) {
   }
   return (
     <div
+      onClick={() => modalState.setOpenModal(false)}
       style={{
         ...ColFlex,
         width: "100dvw",
@@ -37,6 +38,7 @@ function Modal({ children, modalState, subTitle, title }: IModal) {
     >
       {/* modal content */}
       <div
+        onClick={(e) => e.stopPropagation()}
         className="fade-in-fast"
         style={{
           ...ColFlex,

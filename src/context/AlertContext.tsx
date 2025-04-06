@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useRef } from "react";
 import EdgeGlow from "../components/ui/EdgeGlow";
 import Alert from "../components/ui/Alert";
 
@@ -19,9 +19,19 @@ export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [glow, setGlow] = useState<"success" | "error" | "info" | null>(null);
 
+  const alertTimeoutRef = useRef<any>(null);
+
   const showAlert = (message: string, type: "success" | "error" | "info") => {
+    if (alertTimeoutRef.current) {
+      clearTimeout(alertTimeoutRef.current);
+    }
+
     setAlert({ message, type });
-    // setTimeout(() => setAlert(null), 2000);
+
+    alertTimeoutRef.current = setTimeout(() => {
+      setAlert(null);
+      alertTimeoutRef.current = null;
+    }, 5000); // 5s auto-dismiss
   };
 
   const edgeGlow = (type: "success" | "error" | "info") => {

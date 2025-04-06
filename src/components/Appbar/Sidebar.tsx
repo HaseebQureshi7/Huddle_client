@@ -51,25 +51,22 @@ function Sidebar({
           display: "flex",
           alignItems: "center",
           gap: "12px",
-          padding: "16px",
+          padding: "5px",
           cursor: "pointer",
           justifyContent: "flex-start",
           width: "100%",
+          backgroundColor: colors.primary,
         }}
       >
         <Button
           onClick={toggleSidebar}
           style={{
-            backgroundColor: colors.primary,
-            padding: "10px",
+            backgroundColor: "transparent",
+            // padding: "10px",
           }}
         >
-          <List weight="bold" size={20} />
+          <List weight="bold" size={30} />
         </Button>
-        <img
-          src="/images/huddle-logo-top.png"
-          style={{ width: "64px", aspectRatio: "auto" }}
-        />
 
         <div
           style={{
@@ -84,13 +81,16 @@ function Sidebar({
             size={1.25}
             styles={{
               fontWeight: 500,
-              color: "grey",
+              color: "white",
               display: "flex",
               flexDirection: "column",
+              marginRight:"7.5px"
             }}
           >
             {CurrentDateTime().split("•")[0]}
-            <Typography size={1}>{CurrentDateTime().split("•")[1]}</Typography>
+            <Typography size={0.75}>
+              {CurrentDateTime().split("•")[1]}
+            </Typography>
           </Typography>
         </div>
       </div>
@@ -117,7 +117,6 @@ function Sidebar({
         style={{
           position: "absolute",
           top: 0,
-          left: isOpen ? 0 : "-250px",
           height: "100vh",
           width: "250px",
           backgroundColor: colors.background,
@@ -126,7 +125,8 @@ function Sidebar({
           flexDirection: "column",
           gap: "16px",
           zIndex: 1000,
-          transition: "left 0.2s ease-in-out",
+          transform: isOpen ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       >
         <div

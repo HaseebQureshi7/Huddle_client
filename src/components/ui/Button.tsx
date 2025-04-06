@@ -1,6 +1,7 @@
 import { ButtonHTMLAttributes, CSSProperties, ReactNode } from "react";
 import Loading from "./Loading";
 import { ColFlex, RowFlex } from "../../styles/utils/flexUtils";
+import { useVibration } from "../../hooks/useVibration";
 
 interface IButton extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -15,16 +16,26 @@ function Button({
   children,
   isLoading = false,
   disabled = false,
+  onClick,
   tooltip,
   style,
   fullWidth = false,
   ...rest
 }: IButton) {
+  const vibrate = useVibration();
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    vibrate.tap();
+
+    // Call the user's onClick
+    onClick?.(e);
+  };
+
   return (
     <button
       title={tooltip}
       className="button"
       disabled={disabled}
+      onClick={handleClick}
       style={{
         ...RowFlex,
         gap: "10px",

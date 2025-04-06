@@ -8,7 +8,7 @@ function useGetRoom(roomId: string) {
     queryFn: () => getRoomById(roomId), // ✅ Pass argument
     // enabled: !!roomId, // ✅ Prevent fetching when roomId is undefined
     enabled: false,
-    retry:false,
+    retry: false,
     select: (data) => {
       return data.data.room as IRoom;
     },
