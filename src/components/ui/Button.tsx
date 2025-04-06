@@ -60,7 +60,7 @@ function Button({
             ...ColFlex,
           }}
         >
-          <Loading type="button" />
+          <Loading />
         </div>
       ) : (
         children
