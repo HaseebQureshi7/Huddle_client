@@ -3,7 +3,7 @@
 type VibrationType = "tap" | "success" | "error" | "info" | "warning";
 
 const patterns: Record<VibrationType, number | number[]> = {
-  tap: 30,
+  tap: 20,
   success: [50, 50, 50], // buzz - pause - buzz - pause - buzz
   error: [60, 40, 60, 60, 50], // stronger and longer
   info: [60, 30, 60], // mild double buzz

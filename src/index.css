@@ -3,24 +3,55 @@
   padding: 0;
   box-sizing: border-box;
   font-family: Poppins;
-  transition:all 0.25s;
+  transition: all 0.25s;
 }
+
+.logo-loader {
+  position: absolute; /* or relative/fixed depending on layout */
+  top: 50%;
+  left: 50%;
+  /* transform: translate(-50%, -50%) skewX(10deg) skewY(10deg); */
+  animation: logo-loader-anim 1.2s ease-in-out infinite alternate;
+}
+
+
+@keyframes logo-loader-anim {
+  0% {
+    opacity: 0;
+    /* transform: skewX(50deg) skewY(50deg); */
+  }
+  50% {
+    opacity: 1;
+    /* transform: skewX(25deg) skewY(25deg); */
+  }
+  100% {
+    opacity: 0;
+    /* transform: skewX(-50deg) skewY(-50deg); */
+  }
+}
+
 
 .loader {
-  width: 20px;
-  aspect-ratio: 1;
-  --_g: no-repeat
-    radial-gradient(farthest-side, white 40%, black 70%, transparent);
-  background: var(--_g) 0 0, var(--_g) 100% 0, var(--_g) 100% 100%,
-    var(--_g) 0 100%;
-  background-size: 40% 40%;
-  animation: l38 0.5s infinite;
+  /* width: px; */
+  aspect-ratio: 1.5;
+  border: 1px solid #0000;
+  padding: 5px;
+  box-sizing: border-box;
+  background: 
+    radial-gradient(farthest-side,#fff 98%,#0000 ) 0 0/20px 20px no-repeat,
+    conic-gradient(from 90deg at 10px 10px,#0000 90deg,#fff 0) content-box,
+    conic-gradient(from -90deg at 40px 40px,#0000 90deg,#fff 0) content-box,
+    #000;
+  filter: blur(4px) contrast(10);
+  animation: l11 2s infinite;
 }
 
-@keyframes l38 {
-  100% {
-    background-position: 100% 0, 100% 100%, 0 100%, 0 0;
-  }
+@keyframes l11 {
+  0%   {background-position:0 0}
+  25%  {background-position:100% 0}
+  50%  {background-position:100% 100%}
+  75%  {background-position:0% 100%}
+  100% {background-position:0% 0}
 }
 
 .alert {

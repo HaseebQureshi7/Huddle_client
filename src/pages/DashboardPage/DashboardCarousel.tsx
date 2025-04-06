@@ -47,7 +47,7 @@ function DashboardCarousel() {
       {/* upcoming / shadow image */}
       <img
         key={images[currImageIndex]}
-        className="heart_beat_infinite"
+        className={category == "xs" ? "" : "heart_beat_infinite"}
         src={images[currImageIndex]}
         style={{
           height: "250px",
@@ -63,10 +63,13 @@ function DashboardCarousel() {
       />
       {/* current image */}
       <img
-        className="heart_beat_infinite"
+        className={category == "xs" ? "" : "heart_beat_infinite"}
         key={images[currImageIndex + 1]}
         src={images[(currImageIndex + 1) % images.length]}
-        style={{ height: "250px", width: "auto", borderRadius: "10px" }}
+        style={{ height: "250px", width: "auto",
+           borderRadius: "10px",
+        scale: category == "xs" ? 0.9 : 1
+      }}
       />
     </div>
   );

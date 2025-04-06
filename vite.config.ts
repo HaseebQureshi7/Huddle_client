@@ -13,6 +13,8 @@ export default defineConfig({
         "robots.txt",
         "images/icon-192x192.png",
         "images/icon-512x512.png",
+        "images/huddle-logo-top.png",
+        "images/huddle-logo.png",
       ],
       manifest: {
         name: "Huddle",
