@@ -6,9 +6,9 @@ import LoadingPage from "../LoadingPage/LoadingPage";
 import NoRoomFound from "./NoRoomFound";
 import Button from "../../components/ui/Button";
 import {
-  Confetti,
   CornersOut,
   Hand,
+  LinkSimple,
   MicrophoneSlash,
   PhoneDisconnect,
   VideoCameraSlash,
@@ -208,6 +208,15 @@ function SessionPage() {
     return <NoRoomFound />;
   }
 
+  const copyRoomId = async () => {
+    try {
+      await navigator.clipboard.writeText(room_id!);
+      showAlert("Room ID copied!", "success");
+    } catch (err) {
+      showAlert("Failed to copy Room ID", "error");
+    }
+  };
+
   return (
     <div
       className="fade-in"
@@ -293,12 +302,15 @@ function SessionPage() {
           justifyContent: "space-evenly",
         }}
       >
-        <Button title="Send Emoji">
-          <Confetti
+        <Button title="Copy Link" onClick={copyRoomId} style={{
+          backgroundColor:colors.success,
+        }}>
+          <LinkSimple
             style={{ transition: "all 0.4s" }}
             size={actionbarActive ? 25 : 15}
           />
         </Button>
+
         <Button
           title="Turn mic off"
           onClick={toggleAudio}
